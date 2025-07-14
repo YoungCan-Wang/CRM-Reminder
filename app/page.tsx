@@ -1,103 +1,116 @@
-import Image from "next/image";
+'use client'; // 标记为客户端组件，允许使用React Hooks和处理用户交互
+
+import { useState } from 'react'; // 导入useState Hook，用于管理组件状态
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  // 定义状态变量，用于存储表单输入值和提交状态
+  const [email, setEmail] = useState(''); // 收件人邮箱
+  const [message, setMessage] = useState(''); // 消息内容
+  const [sendAt, setSendAt] = useState(''); // 发送时间
+  const [status, setStatus] = useState(''); // 提交状态或反馈信息
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  // 处理表单提交的异步函数
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault(); // 阻止表单默认提交行为（页面刷新）
+    setStatus('Scheduling...'); // 更新状态，向用户显示正在处理
+
+    try {
+      // 发送POST请求到后端API路由 /api/schedule
+      const response = await fetch('/api/schedule', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json', // 告知服务器请求体是JSON格式
+        },
+        body: JSON.stringify({ email, message, sendAt }), // 将表单数据转换为JSON字符串发送
+      });
+
+      const data = await response.json(); // 解析API返回的JSON响应
+
+      // 根据API响应的状态码判断请求是否成功
+      if (response.ok) { // HTTP状态码在200-299之间表示成功
+        setStatus('Reminder scheduled successfully!'); // 显示成功消息
+        // 成功后清空表单
+        setEmail('');
+        setMessage('');
+        setSendAt('');
+      } else {
+        // 显示API返回的错误信息，或通用错误信息
+        setStatus(`Error: ${data.error || 'Something went wrong'}`);
+      }
+    } catch (error) {
+      // 捕获网络错误或其他异常
+      console.error('Submission error:', error);
+      setStatus('Error: Could not connect to the server.');
+    }
+  };
+
+  return (
+    // 主布局容器，居中显示表单
+    <main className="flex min-h-screen flex-col items-center justify-center p-24 bg-gray-50">
+      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
+        <h1 className="text-2xl font-bold text-center text-gray-800">Schedule a Reminder</h1>
+        
+        {/* 表单区域 */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* 邮箱输入框 */}
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              Recipient Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email} // 绑定到email状态变量
+              onChange={(e) => setEmail(e.target.value)} // 输入变化时更新email状态
+              required // 必填字段
+              className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          </div>
+
+          {/* 消息内容文本域 */}
+          <div>
+            <label htmlFor="message" className="block text-sm font-medium text-gray-700">
+              Message
+            </label>
+            <textarea
+              id="message"
+              value={message} // 绑定到message状态变量
+              onChange={(e) => setMessage(e.target.value)} // 输入变化时更新message状态
+              required // 必填字段
+              rows={4} // 文本域行数
+              className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            />
+          </div>
+
+          {/* 发送时间输入框 */}
+          <div>
+            <label htmlFor="sendAt" className="block text-sm font-medium text-gray-700">
+              Send At
+            </label>
+            <input
+              id="sendAt"
+              type="datetime-local" // HTML5日期时间选择器
+              value={sendAt} // 绑定到sendAt状态变量
+              onChange={(e) => setSendAt(e.target.value)} // 输入变化时更新sendAt状态
+              required // 必填字段
+              className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            />
+          </div>
+
+          {/* 提交按钮 */}
+          <button
+            type="submit"
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+            Schedule Reminder
+          </button>
+        </form>
+        
+        {/* 状态消息显示区域 */}
+        {status && (
+          <p className="mt-4 text-center text-sm text-gray-600">{status}</p>
+        )}
+      </div>
+    </main>
   );
 }
