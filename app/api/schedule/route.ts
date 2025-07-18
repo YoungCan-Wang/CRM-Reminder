@@ -6,13 +6,11 @@ import { reminders } from '@/db/schema'; // 导入提醒表schema
 // 处理POST请求的异步函数
 export async function POST(request: Request) {
   try {
-    const body = await request.json(); // 解析请求体中的JSON数据
-    const { email, message, sendAt } = body; // 解构出email, message, sendAt字段
+    const body = await request.json();
+    const { email, message, sendAt } = body;
 
     // --- 输入验证 ---
-    // 检查所有必需字段是否存在
     if (!email || !message || !sendAt) {
-      // 如果缺少任何字段，返回400 Bad Request错误
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -31,9 +29,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, message: 'Reminder scheduled successfully!', reminder: newReminder }, { status: 200 });
 
   } catch (error) {
-    // 捕获处理请求过程中可能发生的任何错误
-    console.error('API Error:', error); // 打印错误到服务器日志
-    // 返回500 Internal Server Error，告知客户端服务器端发生错误
+    console.error('API Error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

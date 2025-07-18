@@ -6,13 +6,16 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:generate": "npx dotenv-cli -e .env -- npx drizzle-kit generate",
+    "db:migrate": "ts-node db/migrate.ts"
   },
   "dependencies": {
     "@vercel/postgres": "^0.10.0",
     "dotenv": "^17.2.0",
     "drizzle-orm": "^0.44.3",
     "next": "15.3.5",
+    "pg": "^8.16.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "resend": "^4.6.0"
@@ -20,9 +23,13 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/pg": "^8.15.4",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv-cli": "^8.0.0",
+    "drizzle-kit": "^0.31.4",
     "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
     "typescript": "^5"
   }
 }
