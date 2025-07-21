@@ -23,22 +23,31 @@ interface SendEmailOptions {
  * 使用 Resend 发送邮件
  * @param options 邮件发送选项
  */
-export async function sendReminderEmail({ to, subject, html, from }: SendEmailOptions) {
+export async function sendReminderEmail({ to, subject, html }: SendEmailOptions) {
   try {
-    // 默认发件人地址，请确保这个地址已在 Resend 中验证
-    const defaultFrom = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+    // 注意：为了确保测试顺利进行，我们强制使用 Resend 的测试发件人地址。
+    // 在生产环境中，您应该替换为您在 Resend 验证过的域名邮箱。
+    const fromAddress = 'onboarding@resend.dev';
 
-    const data = await resend.emails.send({
-      from: from || defaultFrom,
+    const { data, error } = await resend.emails.send({
+      from: fromAddress,
       to: [to],
       subject,
       html,
     });
 
+    // 正确处理 Resend 可能返回的错误
+    if (error) {
+      console.error('Error response from Resend:', error);
+      // 将 Resend 的错误信息包装成一个真正的 Error 对象并抛出
+      throw new Error(`Resend API Error: ${error.message}`);
+    }
+
     console.log('Email sent successfully:', data);
     return data;
   } catch (error) {
-    console.error('Error sending email:', error);
-    throw error; // 重新抛出错误以便调用者处理
+    // 捕获并记录所有错误（例如，网络问题或上面我们主动抛出的错误）
+    console.error('General error in sendReminderEmail:', error);
+    throw error; // 重新抛出错误，以便上层调用者（如 Cron Job）可以捕获
   }
 }
