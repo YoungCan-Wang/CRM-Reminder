@@ -8,6 +8,7 @@ export default function Home() {
   const [message, setMessage] = useState(''); // 消息内容
   const [sendAt, setSendAt] = useState(''); // 发送时间
   const [status, setStatus] = useState(''); // 提交状态或反馈信息
+  const [fetchedReminders, setFetchedReminders] = useState([]); // 新增：用于存储从数据库获取的提醒列表
 
   // 处理表单提交的异步函数
   const handleSubmit = async (e: React.FormEvent) => {
@@ -33,6 +34,8 @@ export default function Home() {
         setEmail('');
         setMessage('');
         setSendAt('');
+        // 提交成功后，刷新提醒列表
+        fetchReminders();
       } else {
         // 显示API返回的错误信息，或通用错误信息
         setStatus(`Error: ${data.error || 'Something went wrong'}`);
@@ -41,6 +44,25 @@ export default function Home() {
       // 捕获网络错误或其他异常
       console.error('Submission error:', error);
       setStatus('Error: Could not connect to the server.');
+    }
+  };
+
+  // 新增：获取提醒列表的异步函数
+  const fetchReminders = async () => {
+    setStatus('Fetching reminders...');
+    try {
+      const response = await fetch('/api/reminders');
+      const data = await response.json();
+
+      if (response.ok) {
+        setFetchedReminders(data.reminders); // 更新状态，存储获取到的提醒列表
+        setStatus('Reminders loaded.');
+      } else {
+        setStatus(`Error fetching reminders: ${data.error || 'Something went wrong'}`);
+      }
+    } catch (error) {
+      console.error('Fetch reminders error:', error);
+      setStatus('Error: Could not connect to the server to fetch reminders.');
     }
   };
 
@@ -109,6 +131,31 @@ export default function Home() {
         {/* 状态消息显示区域 */}
         {status && (
           <p className="mt-4 text-center text-sm text-gray-600">{status}</p>
+        )}
+
+        {/* 新增：查看提醒按钮 */}
+        <button
+          onClick={fetchReminders}
+          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 mt-4"
+        >
+          View All Reminders
+        </button>
+
+        {/* 新增：提醒列表显示区域 */}
+        {fetchedReminders.length > 0 && (
+          <div className="mt-8 w-full">
+            <h2 className="text-xl font-bold mb-4 text-gray-800">Scheduled Reminders</h2>
+            <ul className="space-y-2">
+              {fetchedReminders.map((reminder: any) => (
+                <li key={reminder.id} className="p-4 bg-gray-100 rounded-md shadow-sm text-sm text-gray-700">
+                  <p><strong>To:</strong> {reminder.email}</p>
+                  <p><strong>Message:</strong> {reminder.message}</p>
+                  <p><strong>Send At:</strong> {new Date(reminder.sendAt).toLocaleString()}</p>
+                  <p><strong>Status:</strong> {reminder.status}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
       </div>
     </main>
